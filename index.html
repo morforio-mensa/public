@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Answer — Monitoramento de Marcas em IA</title>
+    <meta name="description" content="Interface premium de monitoramento e análise de marcas em respostas geradas por IA. Teste Técnico First Answer.">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Elements for Premium Glassmorphism -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="url(#logo-grad)"/>
+                        <defs>
+                            <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#2ea3f2"/>
+                                <stop offset="1" stop-color="#38bdf8"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">first<span class="logo-highlight">answer</span></span>
+            </div>
+            
+            <nav class="header-nav">
+                <!-- Requested Buttons: Github and Versão Online -->
+                <a href="https://github.com/lucas-first-answer/repository" target="_blank" class="nav-btn btn-secondary" id="btn-github">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="https://www.niuai.com.br/first-answer" target="_blank" class="nav-btn btn-primary" id="btn-online-version">
+                    <i class="fas fa-globe"></i> Versão Online
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <section class="hero-section">
+            <h1 class="hero-title">Análise de Menção de Marcas em IA</h1>
+            <p class="hero-subtitle">
+                Monitore como os principais modelos de LLM (ChatGPT, Gemini, Claude, etc.) respondem a perguntas e identifique instantaneamente a visibilidade de sua marca e de concorrentes.
+            </p>
+        </section>
+
+        <!-- Test Cases Quick Select -->
+        <section class="test-cases-section">
+            <span class="section-label">Casos de Teste Rápidos:</span>
+            <div class="cases-buttons-grid">
+                <button type="button" class="case-select-btn" id="btn-case-1" onclick="loadTestCase(1)">
+                    <span class="case-badge">Caso 1</span>
+                    <span class="case-brand">Nubank</span>
+                </button>
+                <button type="button" class="case-select-btn" id="btn-case-2" onclick="loadTestCase(2)">
+                    <span class="case-badge">Caso 2</span>
+                    <span class="case-brand">Nike</span>
+                </button>
+                <button type="button" class="case-select-btn" id="btn-case-3" onclick="loadTestCase(3)">
+                    <span class="case-badge">Caso 3</span>
+                    <span class="case-brand">First Answer</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Analyzer Card (Glassmorphic) -->
+        <section class="analyzer-section">
+            <div class="glass-card" id="analyzer-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-magnifying-glass-chart"></i> Painel de Análise</h2>
+                    <p class="card-subtitle">Preencha os dados ou selecione um caso de teste acima para extrair informações.</p>
+                </div>
+                
+                <form id="analysis-form" onsubmit="handleAnalyze(event)">
+                    <!-- Brand Input -->
+                    <div class="form-group">
+                        <label for="input-monitored-brand">Marca Monitorada</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-tag input-icon"></i>
+                            <input type="text" id="input-monitored-brand" placeholder="Ex: Nubank, Nike, First Answer..." required>
+                        </div>
+                    </div>
+
+                    <!-- Text Area Input -->
+                    <div class="form-group">
+                        <label for="input-text">Texto de Resposta da IA</label>
+                        <textarea id="input-text" rows="8" placeholder="Cole aqui o texto gerado pela inteligência artificial..." required></textarea>
+                    </div>
+
+                    <!-- Drag & Drop File Upload -->
+                    <div class="file-upload-container" id="drop-zone">
+                        <input type="file" id="file-input" accept=".md,.txt" onchange="handleFileSelect(event)">
+                        <i class="fas fa-cloud-arrow-up upload-icon"></i>
+                        <p class="upload-text">Arraste um arquivo <code>.md</code> ou <code>.txt</code> aqui, ou <span class="upload-link">procure no computador</span></p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn" id="btn-analyze">
+                        <span class="btn-text"><i class="fas fa-wand-magic-sparkles"></i> Analisar Menções</span>
+                        <span class="spinner" id="btn-spinner"><i class="fas fa-circle-notch fa-spin"></i></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section (Hidden initially) -->
+            <div class="glass-card results-card" id="results-card" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-pie"></i> Resultados da Análise</h2>
+                    <p class="card-subtitle" id="results-timestamp">Análise concluída com sucesso.</p>
+                </div>
+
+                <div class="results-grid">
+                    <!-- Brand Status Card -->
+                    <div class="result-status-card" id="own-brand-card">
+                        <div class="status-icon-container" id="own-brand-status-icon">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="status-info">
+                            <span class="status-label">Marca Monitorada</span>
+                            <span class="status-brand-name" id="result-own-brand-name">-</span>
+                            <span class="status-badge" id="result-own-brand-badge">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Other Brands Card -->
+                    <div class="other-brands-card">
+                        <h3>Outras Marcas Encontradas</h3>
+                        <div class="brands-chips-container" id="other-brands-container">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON Code Output -->
+                <div class="json-output-container">
+                    <div class="json-header">
+                        <span><i class="fas fa-code"></i> Output JSON</span>
+                        <button class="copy-btn" onclick="copyJsonToClipboard()" title="Copiar JSON">
+                            <i class="far fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <pre><code id="json-code-block"></code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 First Answer Teste Técnico. Desenvolvido por Lucas Teixeira.</p>
+            <div class="footer-meta">
+                <span><i class="fas fa-bolt"></i> Alimentado por Gemini 2.5 Flash</span>
+                <span class="separator">|</span>
+                <span><i class="fas fa-database"></i> SQLite local</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
