@@ -1,0 +1,342 @@
+{
+  "name": "My workflow 9",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "firstAnswer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        -400
+      ],
+      "id": "1734332c-79ee-4c39-bb00-fa725c3c06fb",
+      "name": "Webhook",
+      "webhookId": "8109bd86-dbc1-4744-bf9c-0c6f350cd9ab"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM buscar_marcas_no_texto_fuzzy('{{ $json.texto }}', 0.7);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        368,
+        -400
+      ],
+      "id": "98ecd0db-937a-48ed-a4cf-b6d7cacb3ca5",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "EiLoltjSCITritb4",
+          "name": "Postgres Talisman"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obter todas as marcas encontradas pelo banco de dados\nconst marcasEncontradas = $input.all().map(item => item.json.nome).filter(Boolean);\n\n// 2. Tentar obter a marca monitorada usando variações comuns de chaves\nconst noOriginal = $('Set').first().json;\nconst marcaMonitorada = noOriginal.marca_monitorada || noOriginal.brand || noOriginal.marca || \"\";\nconst textoOriginal = noOriginal.texto || noOriginal.text || \"\";\n\n// 3. Normalizar para comparação case-insensitive\nconst marcaMonitoradaLower = marcaMonitorada.toLowerCase().trim();\n\n// 4. Verificar se a marca monitorada foi encontrada pelo banco\nconst indexEncontrado = marcasEncontradas.findIndex(m => m.toLowerCase().trim() === marcaMonitoradaLower);\nconst ownBrandMentioned = indexEncontrado !== -1;\nconst ownBrandCorrected = ownBrandMentioned ? marcasEncontradas[indexEncontrado] : null;\n\n// 5. Filtrar as outras marcas (concorrentes)\nconst otherBrands = marcasEncontradas.filter(m => m.toLowerCase().trim() !== marcaMonitoradaLower);\n\n// 6. Decidir se precisa de fallback (Gemini)\nconst needsFallback = !ownBrandMentioned;\n\nreturn [{\n  json: {\n    own_brand_mentioned: ownBrandMentioned,\n    own_brand_corrected: ownBrandCorrected,\n    other_brands: otherBrands,\n    needs_fallback: needsFallback,\n    original_text: textoOriginal,\n    original_brand: marcaMonitorada\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -400
+      ],
+      "id": "ca928b63-20db-46d4-a1d6-dc616c578e02",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb4071a1-1aa2-42d0-9e43-11d5f1a21157",
+              "name": "marca",
+              "value": "={{ $json.body.brand }}",
+              "type": "string"
+            },
+            {
+              "id": "bbdacd54-aad7-45b9-be06-525055fc54c2",
+              "name": "texto",
+              "value": "={{ $json.body.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        -400
+      ],
+      "id": "0d81b0c6-10da-427d-a805-1daad87ad28f",
+      "name": "Set"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c90db583-4ae1-450f-803e-c493860fbd1b",
+              "leftValue": "={{ $json.needs_fallback }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        -400
+      ],
+      "id": "c578e215-1e5b-4cac-bafc-1625d1f51d49",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        80
+      ],
+      "id": "126ac782-6608-4201-81bb-45c0e5695b86",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "RIDZZumekmzHJIiL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1280,
+        -416
+      ],
+      "id": "7cacfe12-44db-444e-af5e-491cb784c298",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb4071a1-1aa2-42d0-9e43-11d5f1a21157",
+              "name": "own_brand_mentioned",
+              "value": "={{ $json.own_brand_mentioned }}",
+              "type": "string"
+            },
+            {
+              "id": "bbdacd54-aad7-45b9-be06-525055fc54c2",
+              "name": "other_brands",
+              "value": "={{ $json.other_brands }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -416
+      ],
+      "id": "42012904-abfd-4e51-b569-8d524d59a347",
+      "name": "Set1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Tenta pegar a resposta do GPT (pode vir no campo 'text' ou 'message.content' no n8n)\nconst rawText = $input.first().json.text || $input.first().json.message?.content || \"\";\n\n// 2. Faz o parse do texto para transformá-lo em JSON\nconst gptObj = JSON.parse(rawText.trim());\n\n// 3. Retorna apenas as duas informações exigidas no teste\nreturn [{\n  json: {\n    own_brand_mentioned: gptObj.own_brand_mentioned,\n    other_brands: gptObj.other_brands\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        -112
+      ],
+      "id": "6a2a3db6-b164-4f5a-8102-4df61f499d1f",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.original_text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Você é um especialista em NLP encarregado de identificar e extrair marcas de um texto.\nDiretrizes:\n1. Contexto (Crítico): Diferencie marcas comerciais de termos comuns (ex: \"maçã\" = fruta, não Apple; \"first answer\" = expressão de resposta comum, não a empresa First Answer). Extraia apenas se referir à empresa/produto.\n2. Escrita (Fuzzy): Identifique marcas mesmo com erros ortográficos ou grafias informais, normalizando-as (ex: \"Nu bank\" ou \"Nubenqui\" -> \"Nubank\", \"Sansumg\" -> \"Samsung\").\n3. Precisão: Não force palavras comuns parecidas como marcas (ex: \"banco\" solto não é a marca \"Banco Inter\").\n4. Normalização: Retorne os nomes das marcas sempre na grafia oficial de mercado (ex: \"asics gel\" -> \"Asics\").\nFormato de Output (JSON estrito, sem markdown ou textos adicionais):\n{\n  \"own_brand_mentioned\": true/false,\n  \"other_brands\": [\"outras\", \"marcas\", \"mencionadas\"]\n}\nExemplos de Comportamento:\n- Marca: \"Nubank\" | Texto: \"Recomendo o Nu bank. Meu primo usa o Niubenk. Comprei uma maçã no mercado.\"\n  Output: {\"own_brand_mentioned\": true, \"other_brands\": []}\n- Marca: \"Nike\" | Texto: \"Para correr, o Olimpikus é ótimo. O Asics também. A apple do meu relógio arranhou.\"\n  Output: {\"own_brand_mentioned\": false, \"other_brands\": [\"Olympikus\", \"Asics\"]}\n- Marca: \"Apple\" | Texto: \"Dúvida entre aple ou Sansumg.\"\n  Output: {\"own_brand_mentioned\": true, \"other_brands\": [\"Samsung\"]}\nEntradas:\n- MARCA_MONITORADA: \"{{ $json.original_brand }}\"\n- TEXTO_ANALISADO: \"{{ $json.original_text }}\""
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        -112
+      ],
+      "id": "8b52955e-b70b-46ba-9bf1-5dea3e92adc3",
+      "name": "Basic LLM Chain"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Set1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e756c978-8851-4f6e-abb6-aec876aecada",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "01966c51593afa085f19b1f1c364d8582ed1cdd1db66b820d74681c908d40645"
+  },
+  "id": "Ohe9rZXgsKqRgDgP",
+  "tags": []
+}
