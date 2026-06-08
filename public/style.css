@@ -479,10 +479,15 @@ textarea {
 /* ==========================================
    RESULTS SECTION
    ========================================== */
-.results-card {
-    border-color: rgba(56, 189, 248, 0.2);
-    box-shadow: 0 25px 50px -12px rgba(46, 163, 242, 0.15);
+.results-container {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 2rem;
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.results-header {
+    margin-bottom: 1.5rem;
 }
 
 @keyframes slideUp {

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  first-answer-app:
+    build: .
+    container_name: first-answer-app
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+    restart: always

@@ -37,12 +37,9 @@
             </div>
             
             <nav class="header-nav">
-                <!-- Requested Buttons: Github and Versão Online -->
-                <a href="https://github.com/lucas-first-answer/repository" target="_blank" class="nav-btn btn-secondary" id="btn-github">
+                <!-- Requested Button: Github -->
+                <a href="https://github.com/lucas-first-answer/repository" target="_blank" class="nav-btn btn-primary" id="btn-github">
                     <i class="fab fa-github"></i> GitHub
-                </a>
-                <a href="https://www.niuai.com.br/first-answer" target="_blank" class="nav-btn btn-primary" id="btn-online-version">
-                    <i class="fas fa-globe"></i> Versão Online
                 </a>
             </nav>
         </div>
@@ -112,46 +109,36 @@
                         <span class="spinner" id="btn-spinner"><i class="fas fa-circle-notch fa-spin"></i></span>
                     </button>
                 </form>
-            </div>
 
-            <!-- Results Section (Hidden initially) -->
-            <div class="glass-card results-card" id="results-card" style="display: none;">
-                <div class="card-header">
-                    <h2><i class="fas fa-chart-pie"></i> Resultados da Análise</h2>
-                    <p class="card-subtitle" id="results-timestamp">Análise concluída com sucesso.</p>
-                </div>
-
-                <div class="results-grid">
-                    <!-- Brand Status Card -->
-                    <div class="result-status-card" id="own-brand-card">
-                        <div class="status-icon-container" id="own-brand-status-icon">
-                            <!-- Populated by JS -->
-                        </div>
-                        <div class="status-info">
-                            <span class="status-label">Marca Monitorada</span>
-                            <span class="status-brand-name" id="result-own-brand-name">-</span>
-                            <span class="status-badge" id="result-own-brand-badge">-</span>
-                        </div>
+                <!-- Results Section (Hidden initially) -->
+                <div class="results-container" id="results-card" style="display: none;">
+                    <div class="card-header results-header">
+                        <h2><i class="fas fa-chart-pie"></i> Resultados da Análise</h2>
+                        <p class="card-subtitle" id="results-timestamp">Análise concluída com sucesso.</p>
                     </div>
 
-                    <!-- Other Brands Card -->
-                    <div class="other-brands-card">
-                        <h3>Outras Marcas Encontradas</h3>
-                        <div class="brands-chips-container" id="other-brands-container">
-                            <!-- Populated by JS -->
+                    <div class="results-grid">
+                        <!-- Brand Status Card -->
+                        <div class="result-status-card" id="own-brand-card">
+                            <div class="status-icon-container" id="own-brand-status-icon">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="status-info">
+                                <span class="status-label">Marca Monitorada</span>
+                                <span class="status-brand-name" id="result-own-brand-name">-</span>
+                                <span class="status-badge" id="result-own-brand-badge">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Other Brands Card -->
+                        <div class="other-brands-card">
+                            <h3>Outras Marcas Encontradas</h3>
+                            <div class="brands-chips-container" id="other-brands-container">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- JSON Code Output -->
-                <div class="json-output-container">
-                    <div class="json-header">
-                        <span><i class="fas fa-code"></i> Output JSON</span>
-                        <button class="copy-btn" onclick="copyJsonToClipboard()" title="Copiar JSON">
-                            <i class="far fa-copy"></i> Copiar
-                        </button>
                     </div>
-                    <pre><code id="json-code-block"></code></pre>
                 </div>
             </div>
         </section>
@@ -161,9 +148,9 @@
         <div class="footer-container">
             <p>&copy; 2026 First Answer Teste Técnico. Desenvolvido por Lucas Teixeira.</p>
             <div class="footer-meta">
-                <span><i class="fas fa-bolt"></i> Alimentado por Gemini 2.5 Flash</span>
+                <span><i class="fas fa-bolt"></i> Alimentado por n8n + Gemini</span>
                 <span class="separator">|</span>
-                <span><i class="fas fa-database"></i> SQLite local</span>
+                <span><i class="fas fa-database"></i> Supabase / PostgreSQL</span>
             </div>
         </div>
     </footer>

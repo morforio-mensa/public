@@ -1,4 +1,12 @@
 // ==========================================
+// CONFIGURATION (n8n Webhook URL)
+// ==========================================
+// Cole aqui a URL de produção do Webhook do seu n8n.
+// Exemplo: "https://n8n.niuai.com.br/webhook/first-answer"
+// Se mantiver vazia "", o script tentará fazer a requisição para a rota do servidor local.
+const N8N_WEBHOOK_URL = "https://n8n.niuai.com.br/webhook/firstAnswer";
+
+// ==========================================
 // PRE-DEFINED TEST CASES DATA
 // ==========================================
 const testCases = {
@@ -169,7 +177,8 @@ async function handleAnalyze(event) {
     submitBtn.disabled = true;
 
     try {
-        const response = await fetch("/api/analyze", {
+        const url = N8N_WEBHOOK_URL || "/api/analyze";
+        const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -178,7 +187,7 @@ async function handleAnalyze(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`Erro no servidor: ${response.statusText}`);
+            throw new Error(`Erro no processamento: ${response.statusText}`);
         }
 
         const result = await response.json();
@@ -186,7 +195,7 @@ async function handleAnalyze(event) {
         displayResults(brand, result);
     } catch (error) {
         console.error(error);
-        alert("Erro ao realizar análise. Certifique-se de que a API Key do Gemini está configurada e o servidor está rodando.");
+        alert("Erro ao realizar análise. Certifique-se de que a URL do webhook do n8n está configurada no arquivo app.js ou que o servidor local está rodando.");
     } finally {
         // Remove loading state
         submitBtn.classList.remove("loading");
@@ -204,7 +213,6 @@ function displayResults(brandName, result) {
     const resultOwnBrandName = document.getElementById("result-own-brand-name");
     const resultOwnBrandBadge = document.getElementById("result-own-brand-badge");
     const otherBrandsContainer = document.getElementById("other-brands-container");
-    const jsonCodeBlock = document.getElementById("json-code-block");
     const resultsTimestamp = document.getElementById("results-timestamp");
 
     // 1. Set timestamp
@@ -212,7 +220,7 @@ function displayResults(brandName, result) {
     resultsTimestamp.innerText = `Análise concluída em: ${now.toLocaleTimeString()} às ${now.toLocaleDateString()}`;
 
     // 2. Set own brand result
-    resultOwnBrandName.innerText = brandName;
+    resultOwnBrandName.innerText = result.own_brand_corrected || brandName;
     
     // Clear previous classes
     ownBrandCard.className = "result-status-card";
@@ -231,8 +239,27 @@ function displayResults(brandName, result) {
 
     // 3. Set other brands
     otherBrandsContainer.innerHTML = "";
-    if (result.other_brands && result.other_brands.length > 0) {
-        result.other_brands.forEach(otherBrand => {
+    let brandsList = [];
+    if (Array.isArray(result.other_brands)) {
+        brandsList = result.other_brands;
+    } else if (typeof result.other_brands === "string") {
+        const trimmed = result.other_brands.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+                brandsList = JSON.parse(trimmed);
+            } catch (e) {
+                brandsList = trimmed.replace(/[\[\]"']/g, "").split(",").map(s => s.trim()).filter(Boolean);
+            }
+        } else {
+            brandsList = trimmed.split(",").map(s => s.trim()).filter(Boolean);
+        }
+    }
+
+    // Limpeza de segurança para remover aspas sobressalentes de cada marca
+    brandsList = brandsList.map(b => typeof b === "string" ? b.replace(/['"]/g, "").trim() : b).filter(Boolean);
+
+    if (brandsList.length > 0) {
+        brandsList.forEach(otherBrand => {
             const chip = document.createElement("span");
             chip.className = "brand-chip";
             chip.innerHTML = `<i class="fas fa-tag"></i> ${otherBrand}`;
@@ -245,31 +272,7 @@ function displayResults(brandName, result) {
         otherBrandsContainer.appendChild(noBrandsMsg);
     }
 
-    // 4. Set Raw JSON block
-    jsonCodeBlock.innerText = JSON.stringify(result, null, 2);
-
-    // 5. Show Results Card
+    // 4. Show Results Card
     resultsCard.style.display = "block";
     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// ==========================================
-// HELPERS (COPY TO CLIPBOARD)
-// ==========================================
-function copyJsonToClipboard() {
-    if (!currentAnalysisResult) return;
-    
-    const jsonText = JSON.stringify(currentAnalysisResult, null, 2);
-    
-    navigator.clipboard.writeText(jsonText).then(() => {
-        const copyBtn = document.querySelector(".copy-btn");
-        const originalHtml = copyBtn.innerHTML;
-        
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
-        setTimeout(() => {
-            copyBtn.innerHTML = originalHtml;
-        }, 2000);
-    }).catch(err => {
-        console.error('Falha ao copiar:', err);
-    });
 }
