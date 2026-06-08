@@ -4,9 +4,13 @@ Esta aplicação é uma solução de monitoramento e extração de menções a m
 
 ---
 
-## Como rodar
+## Como testar e executar
 
-Você pode executar o projeto de três formas diferentes: localmente com Node.js, empacotado via Docker Compose, ou de forma visual no Portainer.
+Você pode testar a aplicação em produção diretamente online ou executá-la no seu próprio ambiente:
+
+🔗 **Link de Produção:** [https://niuai.com.br/3000](https://niuai.com.br/3000)
+
+Se preferir rodar em seu próprio ambiente, você pode executar o projeto de três formas diferentes: localmente com Node.js, empacotado via Docker Compose, ou de forma visual no Portainer.
 
 ### ⚙️ Configuração das Variáveis de Ambiente
 Crie um arquivo `.env` na raiz do projeto contendo a URL de produção do seu webhook do n8n:
