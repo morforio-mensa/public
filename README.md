@@ -53,6 +53,15 @@ Para rodar a aplicação em um container isolado:
 
 ---
 
+### 🔗 Importando o Fluxo no n8n
+O workflow completo do n8n está disponível na raiz do projeto como `workflow.json`.
+Para importá-lo no seu ambiente:
+1. No painel do seu n8n, crie um novo workflow.
+2. No canto superior direito, clique no menu de opções (três pontos) ➔ **Import from File**.
+3. Selecione o arquivo `workflow.json` para carregar a topologia e as expressões de todos os nós automaticamente.
+
+---
+
 ## Abordagem escolhida
 
 Optamos por uma **arquitetura híbrida baseada em Database-First com Fallback de LLM** pelas seguintes razões:
