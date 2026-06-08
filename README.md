@@ -62,36 +62,35 @@ Para importá-lo no seu ambiente:
 
 ---
 
-## Abordagem escolhida
+## Abordagem escolhida:
 
-Optamos por uma **arquitetura híbrida baseada em Database-First com Fallback de LLM** pelas seguintes razões:
+Considerando recursos e tempo infinitos, seria tentador despejar toda a responsabilidade nas mãos de uma ou mais llms para que elas lidassem com tudo, mas como a realidade é um pouco diferente, preferi pensar na velocidade, escalabilidade e economia de tokens.
 
-1. **Eficiência e Custo Zero de LLM (~90% dos casos):** A primeira etapa do fluxo realiza uma busca por similaridade fonética e ortográfica de trigramas no banco de dados (Supabase/PostgreSQL com `pg_trgm`) contra uma base semente de **2.456 marcas registradas**. Se a marca monitorada for encontrada de forma confiável pelo banco local, o fluxo retorna imediatamente (Custo de LLM = $0 e latência de milissegundos).
-2. **Fallback Inteligente (GPT):** A API do LLM é acionada apenas como retaguarda (fallback) caso a marca monitorada não seja identificada no banco local ou se houver forte ambiguidade no texto. Isso protege a cota de requisições diárias e diminui drasticamente a latência média da aplicação.
-3. **Desacoplamento e Segurança:** O frontend e o backend local Express atuam apenas como proxy e interface do usuário, não expondo credenciais confidenciais do Supabase ou da API do GPT ao navegador.
 
----
+- Algo que foi alterado no meio da execução foi o gerenciamento dos dados. Optamos por construir um banco de dados composto pela Lista de Empresas Ativas da CVM, Startups de Teconologia, Lista das empresas do SP500 e uma lista nascida de uma micro pesquisa-de-mercado. Consultei qual seria o público alvo médio da First Answer, cheguei a um resultado dividido em 3 áreas, reuni então 100 nomes de cada área e montei uma lista com 300 empresas. Nosso banco de dados foi então alimentado pela união dessas 4 listas.
+
+- Optei por utilizar n8n para ter agilidade para elaborar a lógica do backend, afinal o tempo fornecido foi curto, além do fator de já ter um pouco de familiaridade com toda a infraestrutura ao qual ele está inserido: VPS, docker e Postgres. Como são elementos valorizados no anúncio da vaga, acreditei ser de bom gosto aproveitar essa oportunidade de fornecer uma "comprovação" da capacidade de orquestrá-los em conjunto.
+
+- Analisei abordagens de NER. A limitação inicial de divisão em blocos simples me causou resistência, pois qualquer micro alteração seria descartada e, apesar de contarmos com a análise de textos gerados com LLMs, milhares de execuções poderia levar a precisão para baixo, foi então que descobri um novo conceito que irei apresentar no próximo tópico;
+
+- Fuzzy Research. Um método de busca a ser implementado direto no banco de dados via SQL, que possibilita um relaxamento do resultado ao definir um percentual de semelhança sintática entre as palavras comparadas. O valor de 1 retorna apenas palavras exatamente iguais e 0% qualquer uma. Como adotar índices de semelhança mais baixo iria resultar em uma quantidade de palavras recuperadas inevitavalmente sempre muito grande, o esforço de realizar uma nova filtragem (que certamente ocorrerua através de um LLM) poderia retirar o bônus do metodo, afinal, é extremamente rápido e gratuito. Considerando um coeficiente de 0.7 para nosso caso.
+
+- Caso a marca-alvo fosse recuperada pelo Fuzzy Research, o processo era considerado finalizado e as informações enviadas em resposta. Caso a marca-alvo não fosse recuperada, o fluxo era desviado para uma llm que tinha como objetivo identificar as empresas contidas no texto e responder à demanda do software. Considerando que conseguimos elaborar um prompt pequeno e direto, não destinando muita demanda cognitiva para o modelo, o custo naturalmente baixo se torna ainda menor devida à restrição imposta acerca de sua atuação, pois sua função só é executada medianta uma resposta negativa do primeiro método de pesquisa.
+
+- Outro detalhe interessante dessa abordagem foi o nível de segurança, pois não houve necessidade de expor APIs
 
 ## Como usou ferramentas de IA
 
-Utilizei o assistente de codificação inteligente **Antigravity** integrado à IDE para estruturar e refatorar o projeto.
+- Utilizei o Antrigravity, IDE com IA da Google para me auxiliar nesse processo. Forneci o link da página da First Answer e intruções sobre como queria o layout. Pedi para que tudo fosse feito de forma simples e já fui criando webhook e fornecedo endpoint para que fossem associados aos botões. Por vezes então, estava fazendo minhas tarefas enquanto passava atividades para ele, acelerando um pouco o processo. Além de tudo, o agente auxilia com boa assertividade a configurar e resolver problemas que venham a aparecer em algumas instâncias, como abertura de portas na VPS e solução de impasses ocorridos durante a criação do container do docker.
 
-* **Pontos positivos (onde ajudou muito):**
-  * **Aceleração do CSS/Design:** Auxiliou a estruturar rapidamente o visual Dark/Glassmorphic premium em CSS puro, sem necessidade de inflar o projeto com frameworks pesados.
-  * **Consolidação de Parsing:** Criou uma lógica robusta no frontend (`app.js`) para parsear de forma transparente arrays JSON ou strings serializadas retornadas pelo n8n, evitando quebras visuais no navegador.
-* **Pontos negativos (onde atrapalhou/errou):**
-  * **Configuração Incorreta do Git:** O assistente anterior havia inicializado o repositório Git incorretamente dentro da subpasta `/public`, o que deixaria de fora do commit arquivos cruciais da raiz (como `src/`, `Dockerfile` e `tsconfig.json`). Foi necessário realizar a movimentação e reestruturação manual do Git para a raiz.
-  * **Overengineering no Prompt:** O assistente anterior sugeriu um prompt excessivamente longo e redundante para o nó do LLM. Simplificamos o prompt em 60% sem perder qualidade na extração, reduzindo o tempo de resposta e consumo de tokens.
+- O pesadelo inerente do trabalho com IA é a poluição de contexto que escala exponencialmente. A partir de certo momento, a cognição do modelo se torna tão prejudicial à execução de instruções que, além do tempo perdido causado, acaba causando frustração (Vamos morrer por isso? Não). Por vezes ele começa a te fornecer uma ajuda e no meio do processo começa a dar errado, deixando uma sensaçção de vulnerabilidade grande, pois é difícil dizer se o momento do início das execuções precárias coincide com o momento em que foi possível perceber o mau funcionamento. A questão é manter as boas práticas de lapidar, instruir e possuir clareza nas instruções e objetivos.
 
----
 
 ## Onde isso quebra
 
-Sendo transparentes com as limitações técnicas da solução:
-
-1. **Ambiguidade Extrema de Termos Comuns:** Marcas baseadas em palavras comuns (como "CAL", "Segment", "Intel" ou "First Answer") podem enganar o modelo se usadas em sentido estritamente literal no texto (ex: *"Esta foi a first answer do entrevistado"*). O prompt foi refinado com regras contextuais para mitigar isso, mas modelos menores de LLM ainda podem falhar nesse tipo de desambiguação fina.
-2. **Latência Acumulada no Fallback:** Quando o banco de dados falha em encontrar a marca e o fluxo precisa ir até o GPT, a latência total aumenta para cerca de 1,5 a 3 segundos (devido ao tempo de inferência do modelo da OpenAI), o que pode ser perceptível pelo usuário final.
-3. **Instabilidade do Webhook ou LLM:** Se a API da OpenAI apresentar instabilidade ou o n8n ficar inativo no servidor, o fluxo de fallback quebrará e o site retornará um erro ao tentar processar menções que exijam o LLM.
+- Criar um sistema para filtrar e analisar as palavras recuperar pela Fuzzy Research que não possuíam um score de 1, no cenário onde a marca-alvo não era encontrada inicialmente, seria mais um trabalho que, haja vista a quantidade grande de ações que me propus a fazer, resolvi aceitar como deficiência de precisão em nome de fornecer o projeto como um todo. Então pode ser comum (e não realizei experimentações e testagens em batches no Langsmith para elaborar sobre) que os cenários onde o método inicial de busca tenha êxito em encontrar a marca-alvo, que algumas marcas não presentes no texto ou ligeiramente diferentes apareçam. A solução fácil seria através de LLM (eliminando a razão de ser do método) ou uma expansão do banco de dados, acrescentando uma coluna informando a área de atuação da empresa, possibilitando sugerir que, se houvesse um contrates razoável entre a quantidade de palavras de score 1 e as de score <1, e essa diferença também fosse acompanhada de uma falta de isonomia entre entre as áreas desses dois grupos, os grupos de nota inferior teriam maiores chances de serem palavras não relacionadas.
+- Utilizar uma abordagem menos purista, carregada de containers, instancias e co-dependências, naturalmente, expõe a aplicação a uma chance maior de passar por momnentos de inatividade.
+- Textos que não possuem a marca-alvo em seu corpo, inevitavelmente, serão mais assertivos do que aquelas que possuem.
 
 ---
 
