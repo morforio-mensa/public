@@ -38,6 +38,10 @@
     padding: 0;
 }
 
+html {
+    scrollbar-gutter: stable;
+}
+
 html, body {
     width: 100%;
     min-height: 100vh;
@@ -51,6 +55,17 @@ html, body {
 /* ==========================================
    AMBIENT GLOW BACKGROUNDS
    ========================================== */
+.bg-glow-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
+}
+
 .bg-glow {
     position: absolute;
     width: 600px;
